@@ -1,0 +1,3 @@
+Node.js module that parses weekly emails from mint to recover historic account & net worth information
+
+Requires node.js and the node-imap module.
