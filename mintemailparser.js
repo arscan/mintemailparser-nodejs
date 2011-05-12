@@ -1,4 +1,5 @@
-var ImapConnection = require('imap').ImapConnection;
+var ImapConnection = require('imap').ImapConnection,
+fs = require('fs');
 
 /* To use, do something like this:
 
@@ -11,19 +12,25 @@ var ImapConnection = require('imap').ImapConnection;
        port: 993,
        secure: true,
        accountnamemap: {
-	       'Bank of America - MyAccess Checking-02123': 'BOA Checking',
-	       'Bank of America - MyAccess Checking': 'BOA Checking',
+	       'Bank 1 - Checking-02123': 'Checking',
+	       'Bank 1 - Checking': 'Checking',
 	       'ING - Savings': 'ING ',
 	       'ING Direct - Savings': 'ING'
 	   }
    });
  
+   // THIS PRINTS EVERYTHING OUT
+
    mep.run(function(accounts){
          console.log(accounts);
       }, function(){
          console.log("finished");
       }
    );
+
+   // OR IF YOU JUST WANT TO SAVE TO CSV...
+   mep.savetocsv(output.csv);
+
 */
 
 
@@ -45,6 +52,59 @@ MintEmailParser.prototype.run = function(ret,end){
     returnfn = ret; 
     endfn = end;
     cb();    
+}
+
+MintEmailParser.prototype.savetocsv = function(outputfile){
+    history = [];
+    accountnames = {};
+
+    this.run(function(accounts){
+	console.log(accounts);
+	history.push(accounts);
+	
+	
+	
+    }, function(){
+	
+	
+	
+	history.map(function(x){
+	    x.accounts.map(function(y){
+		if(y.account in accountnames)
+		    accountnames[y.account]+=1;
+		else
+		    accountnames[y.account]=1;
+	    });
+	});
+	var output = "Date";
+	for(i in accountnames)
+	    output+=","+i;
+	
+	for(i=0; i<history.length; i++){
+	    tmpvalues={};
+	    output += "\r\n";	    
+	    for(j in accountnames)
+		tmpvalues[j] = 0;
+	    
+	    for(j=0; j<history[i].accounts.length; j++)
+		tmpvalues[history[i].accounts[j].account] = history[i].accounts[j].value;
+	    
+	    output += history[i].date;
+	    for(j in tmpvalues)
+		output+=","+tmpvalues[j];
+	}
+	
+	fs.writeFile(outputfile, output, function(err) {
+	    if(err) {
+		console.log(err);
+	    } else {
+		console.log("The file was saved!");
+	    }
+	}); 
+	
+	console.log(accountnames);
+    });
+
 }
 
 exports.MintEmailParser = MintEmailParser;
